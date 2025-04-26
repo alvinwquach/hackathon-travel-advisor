@@ -48,9 +48,15 @@ export default function PlanTrip() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [preferences, setPreferences] = useState<TravelPreferencesForm>(initialPreferences);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  console.log('Current isGenerating state:', isGenerating);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submit handler called, setting isGenerating to true');
+    setIsGenerating(true);
+    
     try {
       const response = await fetch('/api/travel', {
         method: 'POST',
@@ -73,6 +79,9 @@ export default function PlanTrip() {
     } catch (error) {
       console.error('Error:', error);
       // Handle error (show error message to user)
+    } finally {
+      console.log('Setting isGenerating to false');
+      setIsGenerating(false);
     }
   };
 
@@ -524,9 +533,19 @@ export default function PlanTrip() {
               ) : (
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-blue-500/25"
+                  disabled={isGenerating}
+                  className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-blue-500/25 ${
+                    isGenerating ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Generate Itinerary
+                  {isGenerating ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Generating Itinerary...</span>
+                    </div>
+                  ) : (
+                    'Generate Itinerary'
+                  )}
                 </button>
               )}
             </div>

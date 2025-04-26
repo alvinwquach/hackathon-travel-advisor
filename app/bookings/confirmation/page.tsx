@@ -15,22 +15,24 @@ export default function BookingConfirmationPage() {
   const [bookingStatus, setBookingStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        // Fetch itinerary
-        const itineraryResponse = await fetch('/api/itinerary');
-        if (!itineraryResponse.ok) {
-          throw new Error('Failed to fetch itinerary');
+        // Load itinerary from localStorage
+        const storedItinerary = localStorage.getItem('currentItinerary');
+        if (!storedItinerary) {
+          throw new Error('No itinerary found');
         }
-        const itineraryData = await itineraryResponse.json();
-        setItinerary(itineraryData.itinerary);
+        setItinerary(JSON.parse(storedItinerary));
 
-        // Fetch booking response
-        const bookingResponse = await fetch('/api/booking');
-        if (!bookingResponse.ok) {
-          throw new Error('Failed to fetch booking response');
+        // Load booking response from localStorage
+        const storedBookingResponse = localStorage.getItem('bookingResponse');
+        if (!storedBookingResponse) {
+          throw new Error('No booking response found');
         }
-        const bookingData = await bookingResponse.json();
+        const bookingData = JSON.parse(storedBookingResponse);
+        if (!bookingData.bookings) {
+          throw new Error('Invalid booking response format');
+        }
         setBookingResponse(bookingData);
         setBookingStatus('success');
       } catch (error) {
@@ -41,7 +43,7 @@ export default function BookingConfirmationPage() {
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   if (loading) {
@@ -88,7 +90,7 @@ export default function BookingConfirmationPage() {
             </p>
           </div>
 
-          {bookingStatus === 'success' && (
+          {bookingStatus === 'success' && bookingResponse?.bookings && (
             <>
               <div className="bg-gray-700 rounded-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold text-white mb-4">Flight Details</h2>

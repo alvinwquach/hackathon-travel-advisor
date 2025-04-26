@@ -10,6 +10,7 @@ export default function ItineraryPage() {
   const [loading, setLoading] = useState(true);
   const [showModifyOptions, setShowModifyOptions] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [isModifying, setIsModifying] = useState(false);
   const [feedback, setFeedback] = useState<ItineraryFeedback>({
     modifications: [],
     generalFeedback: '',
@@ -18,51 +19,44 @@ export default function ItineraryPage() {
   });
 
   useEffect(() => {
-    const fetchItinerary = async () => {
+    const loadItinerary = () => {
       try {
-        const response = await fetch('/api/itinerary');
-        if (!response.ok) {
-          throw new Error('Failed to fetch itinerary');
+        const storedItinerary = localStorage.getItem('currentItinerary');
+        if (!storedItinerary) {
+          throw new Error('No itinerary found in localStorage');
         }
-        const data = await response.json();
-        setItinerary(data.itinerary);
+        const itinerary = JSON.parse(storedItinerary);
+        setItinerary(itinerary);
       } catch (error) {
-        console.error('Error fetching itinerary:', error);
+        console.error('Error loading itinerary:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItinerary();
+    loadItinerary();
   }, []);
 
   const handleModify = async () => {
     try {
-      // Comment out API call for now
-      // const response = await fetch('/api/travel', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     action: 'get_itinerary_feedback',
-      //     feedback: feedback,
-      //     currentItinerary: itinerary,
-      //   }),
-      // });
+      setIsModifying(true);
+      const response = await fetch('/api/travel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'get_feedback',
+          preferences: itinerary?.traveler.preferences,
+          itinerary: itinerary,
+          feedback: feedback
+        }),
+      });
 
-      // if (!response.ok) {
-      //   throw new Error('Failed to modify itinerary');
-      // }
-
-      // const data = await response.json();
-      // setItinerary(data.itinerary);
-
-      // Instead, read from feedback.json
-      const response = await fetch('/api/feedback');
       if (!response.ok) {
-        throw new Error('Failed to fetch feedback');
+        throw new Error('Failed to modify itinerary');
       }
+
       const data = await response.json();
       setItinerary(data.itinerary);
       
@@ -76,17 +70,36 @@ export default function ItineraryPage() {
       });
     } catch (error) {
       console.error('Error:', error);
+      // Show error message to user
+      alert('Failed to modify your itinerary. Please try again.');
+    } finally {
+      setIsModifying(false);
     }
   };
 
   const handleBooking = async () => {
     try {
       setIsBooking(true);
-      const response = await fetch('/api/booking');
+      const response = await fetch('/api/travel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'simulate_bookings',
+          preferences: itinerary?.traveler.preferences,
+          itinerary: itinerary
+        }),
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to book items');
+        throw new Error('Failed to simulate bookings');
       }
 
+      const data = await response.json();
+      // Store the booking response in localStorage for the confirmation page
+      localStorage.setItem('bookingResponse', JSON.stringify({ bookings: data.bookings }));
+      
       // Navigate to booking confirmation page
       router.push('/bookings/confirmation');
     } catch (error) {
@@ -310,9 +323,19 @@ export default function ItineraryPage() {
                 </button>
                 <button
                   onClick={handleModify}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={isModifying}
+                  className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+                    isModifying ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Submit Modifications
+                  {isModifying ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Modifying...</span>
+                    </div>
+                  ) : (
+                    'Submit Modifications'
+                  )}
                 </button>
               </div>
             </div>
