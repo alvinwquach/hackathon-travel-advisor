@@ -1,4 +1,4 @@
-import { TravelPreferences, TravelItinerary, BookingSimulation } from '../types/travel';
+import { TravelPreferences, TravelItinerary, BookingSimulation, ItineraryFeedback } from '../types/travel';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -211,23 +211,43 @@ Format the response as a JSON object with the following structure:
     }
   }
 
-  async getItineraryFeedback(itinerary: TravelItinerary, userFeedback: string): Promise<TravelItinerary> {
+  async getItineraryFeedback(itinerary: TravelItinerary, feedback: ItineraryFeedback): Promise<TravelItinerary> {
     try {
-      const prompt = `The user has provided feedback on their travel itinerary. Please modify the itinerary based on this feedback:
+      const prompt = `The user has provided feedback on their travel itinerary. Please modify the itinerary based on this structured feedback:
 
 Original Itinerary:
 ${JSON.stringify(itinerary, null, 2)}
 
 User Feedback:
-${userFeedback}
+${JSON.stringify(feedback, null, 2)}
 
-Please create an updated itinerary that addresses the user's feedback while maintaining the original preferences and constraints.
+Please create an updated itinerary that addresses the user's feedback while maintaining the original preferences and constraints. Consider the following:
+
+1. For each modification:
+   - If adding an activity/meal, ensure it fits the user's preferences and budget
+   - If removing an activity/meal, adjust the schedule accordingly
+   - If modifying timing, ensure it doesn't conflict with other activities
+   - If changing locations, consider transportation time and costs
+
+2. For general feedback:
+   - Adjust the overall schedule to better match user preferences
+   - Consider energy levels and travel pace
+   - Maintain budget constraints
+
+3. For budget adjustments:
+   - If increasing budget, suggest premium options
+   - If decreasing budget, suggest cost-effective alternatives
+
+4. For time adjustments:
+   - Ensure all activities remain feasible
+   - Maintain proper spacing between activities
+   - Consider transportation times
 
 Format the response as a JSON object matching the TravelItinerary type.`;
 
       const completion = await openai.chat.completions.create({
         messages: [
-          { role: "system", content: "You are a travel itinerary modification system that adjusts plans based on user feedback." },
+          { role: "system", content: "You are a travel itinerary modification system that adjusts plans based on structured user feedback." },
           { role: "user", content: prompt }
         ],
         model: "gpt-4-turbo-preview",

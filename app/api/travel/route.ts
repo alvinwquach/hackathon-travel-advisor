@@ -3,9 +3,10 @@ import { TravelAgent } from '@/app/services/travelAgent';
 import { TravelPreferences } from '@/app/types/travel';
 import type { ItineraryFeedback } from '@/app/types/travel';
 
-// Bypass authentication for testing
+// Configure the API route
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
+export const maxDuration = 300; // 5 minutes timeout
 
 export async function POST(request: Request) {
   try {
