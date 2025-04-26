@@ -6,7 +6,7 @@ import type { ItineraryFeedback } from '@/app/types/travel';
 // Configure the API route
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes timeout
+export const maxDuration = 60; // 1 minute timeout
 
 export async function POST(request: Request) {
   try {
