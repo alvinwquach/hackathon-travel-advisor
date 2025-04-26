@@ -51,6 +51,36 @@ export type TravelPreferences = {
   };
 };
 
+// Form-specific types
+export type TravelPreferencesForm = {
+  destination: string;
+  travelDates: {
+    arrival: string;
+    departure: string;
+  };
+  personalPreferences: {
+    activities: {
+      likes: string[];
+      dislikes: string[];
+    };
+    dietaryRestrictions: DietaryRestriction[];
+    energyLevel: 'relaxed' | 'balanced' | 'busy';
+    travelPace: 'lots of rest' | 'packed schedule';
+    budget: {
+      type: 'total' | 'per-day';
+      amount: number;
+      currency: string;
+    };
+  };
+  hotelPreferences?: HotelPreference;
+  flightPreferences?: FlightPreference;
+  transportationPreferences?: TransportationPreference;
+  otherInfo?: {
+    weatherSensitivity?: string;
+    packingHelpNeeded: boolean;
+  };
+};
+
 export type ItineraryItem = {
   day: number;
   date: string;
