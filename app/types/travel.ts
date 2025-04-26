@@ -153,4 +153,48 @@ export type BookingSimulation = {
   }[];
   totalCost: number;
   estimatedSavings: number;
+};
+
+export type ItineraryModificationType = 
+  | 'add_activity'
+  | 'remove_activity'
+  | 'modify_activity'
+  | 'add_meal'
+  | 'remove_meal'
+  | 'modify_meal'
+  | 'change_transportation'
+  | 'adjust_timing'
+  | 'change_location'
+  | 'other';
+
+export type ItineraryModification = {
+  type: ItineraryModificationType;
+  day: number;
+  details: {
+    activityIndex?: number;
+    mealIndex?: number;
+    transportationIndex?: number;
+    newTime?: string;
+    newLocation?: string;
+    newDescription?: string;
+    newRestaurant?: string;
+    newCuisine?: string;
+    newMethod?: string;
+    otherDetails?: string;
+  };
+};
+
+export type ItineraryFeedback = {
+  modifications: ItineraryModification[];
+  generalFeedback?: string;
+  budgetAdjustment?: {
+    type: 'increase' | 'decrease';
+    amount: number;
+    currency: string;
+  };
+  timeAdjustment?: {
+    type: 'earlier' | 'later';
+    amount: number;
+    unit: 'minutes' | 'hours';
+  };
 }; 
