@@ -23,6 +23,24 @@ const initialPreferences: TravelPreferencesForm = {
       amount: 0,
       currency: 'USD'
     }
+  },
+  hotelPreferences: {
+    type: '',
+    loyaltyPrograms: [],
+    roomPreferences: []
+  },
+  flightPreferences: {
+    class: 'economy',
+    airlineMemberships: [],
+    seatPreferences: []
+  },
+  transportationPreferences: {
+    preferredMethods: [],
+    comfortVsCost: 'cost'
+  },
+  otherInfo: {
+    weatherSensitivity: '',
+    packingHelpNeeded: false
   }
 };
 
@@ -191,6 +209,92 @@ export default function PlanTrip() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Activities You Dislike
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Museums', 'Shopping', 'Fine Dining', 'Nightlife', 'Beach', 'Hiking', 'History Tours'].map((activity) => (
+                      <label key={activity} className="flex items-center space-x-2 text-gray-300">
+                        <input
+                          type="checkbox"
+                          className="rounded text-blue-500 border-gray-600 bg-gray-700 focus:ring-blue-500"
+                          checked={preferences.personalPreferences?.activities?.dislikes?.includes(activity.toLowerCase())}
+                          onChange={(e) => {
+                            const dislikes = preferences.personalPreferences?.activities?.dislikes || [];
+                            const newDislikes = e.target.checked
+                              ? [...dislikes, activity.toLowerCase()]
+                              : dislikes.filter(a => a !== activity.toLowerCase());
+                            
+                            updatePreferences({
+                              personalPreferences: {
+                                ...preferences.personalPreferences,
+                                activities: {
+                                  ...preferences.personalPreferences?.activities,
+                                  dislikes: newDislikes
+                                }
+                              }
+                            });
+                          }}
+                        />
+                        <span>{activity}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Dietary Restrictions
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'Dairy-Free'].map((restriction) => (
+                      <label key={restriction} className="flex items-center space-x-2 text-gray-300">
+                        <input
+                          type="checkbox"
+                          className="rounded text-blue-500 border-gray-600 bg-gray-700 focus:ring-blue-500"
+                          checked={preferences.personalPreferences?.dietaryRestrictions?.some(r => r.type === restriction.toLowerCase())}
+                          onChange={(e) => {
+                            const restrictions = preferences.personalPreferences?.dietaryRestrictions || [];
+                            const newRestrictions = e.target.checked
+                              ? [...restrictions, { type: restriction.toLowerCase() }]
+                              : restrictions.filter(r => r.type !== restriction.toLowerCase());
+                            
+                            updatePreferences({
+                              personalPreferences: {
+                                ...preferences.personalPreferences,
+                                dietaryRestrictions: newRestrictions
+                              }
+                            });
+                          }}
+                        />
+                        <span>{restriction}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Travel Pace
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+                    required
+                    value={preferences.personalPreferences?.travelPace || ''}
+                    onChange={(e) => updatePreferences({
+                      personalPreferences: {
+                        ...preferences.personalPreferences,
+                        travelPace: e.target.value as 'lots of rest' | 'packed schedule'
+                      }
+                    })}
+                  >
+                    <option value="">Select your travel pace</option>
+                    <option value="lots of rest">Lots of Rest Time</option>
+                    <option value="packed schedule">Packed Schedule</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Budget Range
                   </label>
                   <select
@@ -235,6 +339,146 @@ export default function PlanTrip() {
                     <option value="balanced">Balanced</option>
                     <option value="busy">Busy/Active</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Hotel Type
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+                    required
+                    value={preferences.hotelPreferences?.type || ''}
+                    onChange={(e) => updatePreferences({
+                      hotelPreferences: {
+                        ...preferences.hotelPreferences,
+                        type: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="">Select hotel type</option>
+                    <option value="luxury hotel">Luxury Hotel</option>
+                    <option value="boutique hotel">Boutique Hotel</option>
+                    <option value="resort">Resort</option>
+                    <option value="budget hotel">Budget Hotel</option>
+                    <option value="airbnb">Airbnb</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Flight Class
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+                    required
+                    value={preferences.flightPreferences?.class || ''}
+                    onChange={(e) => updatePreferences({
+                      flightPreferences: {
+                        ...preferences.flightPreferences,
+                        class: e.target.value
+                      }
+                    })}
+                  >
+                    <option value="">Select flight class</option>
+                    <option value="economy">Economy</option>
+                    <option value="premium economy">Premium Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First Class</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Preferred Transportation Methods
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Taxi', 'Subway', 'Bus', 'Walking', 'Ride-sharing', 'Rental Car'].map((method) => (
+                      <label key={method} className="flex items-center space-x-2 text-gray-300">
+                        <input
+                          type="checkbox"
+                          className="rounded text-blue-500 border-gray-600 bg-gray-700 focus:ring-blue-500"
+                          checked={preferences.transportationPreferences?.preferredMethods?.includes(method.toLowerCase())}
+                          onChange={(e) => {
+                            const methods = preferences.transportationPreferences?.preferredMethods || [];
+                            const newMethods = e.target.checked
+                              ? [...methods, method.toLowerCase()]
+                              : methods.filter(m => m !== method.toLowerCase());
+                            
+                            updatePreferences({
+                              transportationPreferences: {
+                                ...preferences.transportationPreferences,
+                                preferredMethods: newMethods,
+                                comfortVsCost: preferences.transportationPreferences?.comfortVsCost || 'cost'
+                              }
+                            });
+                          }}
+                        />
+                        <span>{method}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Transportation Priority
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+                    required
+                    value={preferences.transportationPreferences?.comfortVsCost || ''}
+                    onChange={(e) => updatePreferences({
+                      transportationPreferences: {
+                        ...preferences.transportationPreferences,
+                        preferredMethods: preferences.transportationPreferences?.preferredMethods || [],
+                        comfortVsCost: e.target.value as 'comfort' | 'cost'
+                      }
+                    })}
+                  >
+                    <option value="">Select priority</option>
+                    <option value="comfort">Comfort</option>
+                    <option value="cost">Cost</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Weather Sensitivity
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+                    value={preferences.otherInfo?.weatherSensitivity || ''}
+                    onChange={(e) => updatePreferences({
+                      otherInfo: {
+                        ...preferences.otherInfo,
+                        weatherSensitivity: e.target.value,
+                        packingHelpNeeded: preferences.otherInfo?.packingHelpNeeded || false
+                      }
+                    })}
+                  >
+                    <option value="">Select weather preference</option>
+                    <option value="prefer sunny">Prefer Sunny Weather</option>
+                    <option value="prefer cool">Prefer Cool Weather</option>
+                    <option value="no preference">No Preference</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="flex items-center space-x-2 text-gray-300">
+                    <input
+                      type="checkbox"
+                      className="rounded text-blue-500 border-gray-600 bg-gray-700 focus:ring-blue-500"
+                      checked={preferences.otherInfo?.packingHelpNeeded || false}
+                      onChange={(e) => updatePreferences({
+                        otherInfo: {
+                          ...preferences.otherInfo,
+                          packingHelpNeeded: e.target.checked
+                        }
+                      })}
+                    />
+                    <span>I need help with packing suggestions</span>
+                  </label>
                 </div>
               </div>
             )}
