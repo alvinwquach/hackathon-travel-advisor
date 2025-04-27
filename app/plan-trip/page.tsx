@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TravelPreferences, TravelPreferencesForm } from '@/app/types/travel';
 import Globe from '@/app/components/Globe';
@@ -55,15 +55,18 @@ const initialPreferences: TravelPreferencesForm = {
 export default function PlanTrip() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [preferences, setPreferences] = useState<TravelPreferencesForm>(() => {
-    const savedPreferences = localStorage.getItem("travelPreferences");
-    return savedPreferences ? JSON.parse(savedPreferences) : initialPreferences;
-  });
+  const [preferences, setPreferences] = useState<TravelPreferencesForm>(initialPreferences);
   const [isGenerating, setIsGenerating] = useState(false);
   const [destination, setDestination] = useState<Place | null>(null);
-  // const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debouncedValue, setDebouncedValue] = useState("");
+
+  // Load saved preferences from localStorage on client side
+  useEffect(() => {
+    const savedPreferences = localStorage.getItem("travelPreferences");
+    if (savedPreferences) {
+      setPreferences(JSON.parse(savedPreferences));
+    }
+  }, []);
 
   // Debounce function to delay the API call
   const debounce = useCallback(
@@ -92,7 +95,7 @@ export default function PlanTrip() {
             longitude: lon,
             latitude: lat,
           });
-        } catch (error) {
+        } catch {
           setError(
             "Could not find that destination. Try a different city or check your spelling."
           );
@@ -108,7 +111,6 @@ export default function PlanTrip() {
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     updatePreferences({ destination: value });
-    setDebouncedValue(value);
     debouncedDestinationChange(value);
   };
 
