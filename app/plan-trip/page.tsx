@@ -441,7 +441,7 @@ export default function PlanTrip() {
                               name="hotelType"
                               className="w-4 h-4 text-blue-500 border-gray-600 bg-gray-700/50 focus:ring-blue-500 transition-all duration-200"
                               checked={preferences.hotelPreferences?.type === type.toLowerCase()}
-                              onChange={(e) => updatePreferences({
+                              onChange={() => updatePreferences({
                                 hotelPreferences: {
                                   ...preferences.hotelPreferences,
                                   type: type.toLowerCase()
@@ -467,7 +467,7 @@ export default function PlanTrip() {
                               name="flightClass"
                               className="w-4 h-4 text-blue-500 border-gray-600 bg-gray-700/50 focus:ring-blue-500 transition-all duration-200"
                               checked={preferences.flightPreferences?.class === classType.toLowerCase()}
-                              onChange={(e) => updatePreferences({
+                              onChange={() => updatePreferences({
                                 flightPreferences: {
                                   ...preferences.flightPreferences,
                                   class: classType.toLowerCase()
