@@ -39,7 +39,7 @@ export default function Home() {
         longitude: lon,
         latitude: lat,
       });
-    } catch (err) {
+    } catch (_) {
       setError(
         "Could not find that destination. Try a different city or check your spelling."
       );
