@@ -12,9 +12,53 @@ interface GlobeProps {
 
 export default function Globe({ rotateTo }: GlobeProps) {
   const globeRef = useRef<SVGSVGElement>(null);
+  const globeState = useRef<{
+    projection: d3.GeoProjection;
+    pathGenerator: d3.GeoPath;
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    marker: d3.Selection<SVGGElement, unknown, null, undefined>;
+  } | null>(null);
 
+  // Function to update the marker
+  const updateMarker = () => {
+    if (!globeState.current || !rotateTo) return;
+    
+    const { projection, marker } = globeState.current;
+    marker.selectAll("*").remove();
+    
+    if (!isNaN(rotateTo.longitude) && !isNaN(rotateTo.latitude)) {
+      const [x, y] = projection([
+        rotateTo.longitude,
+        rotateTo.latitude,
+      ]) || [0, 0];
+
+      marker
+        .append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", 8)
+        .attr("fill", "#FF5733")
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2)
+        .attr("filter", "url(#drop-shadow)");
+
+      marker
+        .append("text")
+        .attr("x", x)
+        .attr("y", y - 12)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "14px")
+        .attr("font-weight", "bold")
+        .attr("fill", "#333")
+        .attr("stroke", "white")
+        .attr("stroke-width", "0.8px")
+        .text(rotateTo.name);
+    }
+  };
+
+  // Initialize the globe
   useEffect(() => {
-    if (!globeRef.current) return;
+    if (!globeRef.current || globeState.current) return;
 
     const width = 600;
     const height = 600;
@@ -49,7 +93,6 @@ export default function Globe({ rotateTo }: GlobeProps) {
       .attr("d", pathGenerator as any);
 
     const map = svg.append("g");
-
     const marker = svg.append("g").attr("class", "marker");
 
     d3.json<Topology>(
@@ -95,42 +138,6 @@ export default function Globe({ rotateTo }: GlobeProps) {
         })
       );
 
-      function updateMarker() {
-        marker.selectAll("*").remove();
-        if (
-          rotateTo &&
-          !isNaN(rotateTo.longitude) &&
-          !isNaN(rotateTo.latitude)
-        ) {
-          const [x, y] = projection([
-            rotateTo.longitude,
-            rotateTo.latitude,
-          ]) || [0, 0];
-
-          marker
-            .append("circle")
-            .attr("cx", x)
-            .attr("cy", y)
-            .attr("r", 8)
-            .attr("fill", "#FF5733")
-            .attr("stroke", "#ffffff")
-            .attr("stroke-width", 2)
-            .attr("filter", "url(#drop-shadow)");
-
-          marker
-            .append("text")
-            .attr("x", x)
-            .attr("y", y - 12)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "14px")
-            .attr("font-weight", "bold")
-            .attr("fill", "#333")
-            .attr("stroke", "white")
-            .attr("stroke-width", "0.8px")
-            .text(rotateTo.name);
-        }
-      }
-
       svg
         .append("defs")
         .append("filter")
@@ -142,31 +149,55 @@ export default function Globe({ rotateTo }: GlobeProps) {
         .attr("flood-color", "black")
         .attr("flood-opacity", 0.3);
 
-      if (rotateTo && !isNaN(rotateTo.longitude) && !isNaN(rotateTo.latitude)) {
-        const r = d3.interpolate(projection.rotate(), [
-          -rotateTo.longitude,
-          -rotateTo.latitude,
-        ] as [number, number]);
+      // Store the globe state
+      globeState.current = {
+        projection,
+        pathGenerator,
+        svg,
+        marker
+      };
 
-        d3.transition()
-          .duration(1250)
-          .tween("rotate", () => {
-            return (t: number) => {
-              projection.rotate(r(t));
-              pathGenerator.projection(projection);
-              svg.selectAll("path").attr("d", pathGenerator as any);
-              updateMarker();
-            };
-          });
-      }
-
+      // Initial marker update
       updateMarker();
     });
 
     return () => {
       d3.select(globeRef.current).selectAll("*").remove();
+      globeState.current = null;
     };
-  }, [rotateTo]);
+  }, []); // Empty dependency array - only run once
+
+  // Handle rotation updates
+  useEffect(() => {
+    if (!globeState.current || !rotateTo) return;
+
+    const { projection, pathGenerator, svg } = globeState.current;
+
+    const currentRotation = projection.rotate();
+    const targetRotation = [-rotateTo.longitude, -rotateTo.latitude] as [number, number];
+    
+    // Calculate the shortest path for longitude
+    let longitudeDiff = targetRotation[0] - currentRotation[0];
+    if (Math.abs(longitudeDiff) > 180) {
+      longitudeDiff = longitudeDiff > 0 ? longitudeDiff - 360 : longitudeDiff + 360;
+    }
+    
+    const r = d3.interpolate(currentRotation, [
+      currentRotation[0] + longitudeDiff,
+      targetRotation[1]
+    ] as [number, number]);
+
+    d3.transition()
+      .duration(1250)
+      .tween("rotate", () => {
+        return (t: number) => {
+          projection.rotate(r(t));
+          pathGenerator.projection(projection);
+          svg.selectAll("path").attr("d", pathGenerator as any);
+          updateMarker();
+        };
+      });
+  }, [rotateTo]); // Only run when rotateTo changes
 
   return <svg ref={globeRef}></svg>;
 }

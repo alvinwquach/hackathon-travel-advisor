@@ -1,21 +1,22 @@
-export async function geocodeAddress(
-  address: string
-): Promise<{ lat: number; lon: number }> {
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
-  const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-    address
-  )}.json?access_token=${mapboxToken}`;
-
+export async function geocodeAddress(address: string): Promise<{ lat: number; lon: number }> {
   try {
-    const response = await fetch(geocodeUrl, { cache: "force-cache" });
-    if (!response.ok) {
-      throw new Error(`Failed to geocode address: ${response.statusText}`);
-    }
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        address
+      )}`
+    );
     const data = await response.json();
-    const [lon, lat] = data.features[0]?.center ?? [0, 0];
-    return { lat, lon };
+
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+      };
+    }
+
+    return { lat: 0, lon: 0 };
   } catch (error) {
-    console.error("Error geocoding address:", error);
+    console.error('Geocoding error:', error);
     return { lat: 0, lon: 0 };
   }
 }
