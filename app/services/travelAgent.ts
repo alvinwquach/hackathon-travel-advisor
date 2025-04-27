@@ -120,7 +120,7 @@ Format the response as a JSON object matching the TravelItinerary type with the 
           { role: "system", content: "You are a highly personalized AI Travel Advisor that creates detailed travel itineraries." },
           { role: "user", content: prompt }
         ],
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o",
         response_format: { type: "json_object" },
       });
 
@@ -195,7 +195,7 @@ Format the response as a JSON object with the following structure:
           { role: "system", content: "You are a travel booking simulation system that creates realistic booking scenarios." },
           { role: "user", content: prompt }
         ],
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o",
         response_format: { type: "json_object" },
       });
 
@@ -250,7 +250,7 @@ Format the response as a JSON object matching the TravelItinerary type.`;
           { role: "system", content: "You are a travel itinerary modification system that adjusts plans based on structured user feedback." },
           { role: "user", content: prompt }
         ],
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o",
         response_format: { type: "json_object" },
       });
 
