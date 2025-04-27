@@ -13,6 +13,7 @@ export default function BookingConfirmationPage() {
   const [bookingResponse, setBookingResponse] = useState<BookingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingStatus, setBookingStatus] = useState<'pending' | 'success' | 'error'>('pending');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +46,35 @@ export default function BookingConfirmationPage() {
 
     loadData();
   }, []);
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true);
+      const response = await fetch('/api/travel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'generate_pdf',
+          itinerary: itinerary
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      const data = await response.json();
+      // Handle the PDF data directly
+      window.open(data.pdfUrl, '_blank');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (loading) {
     return (

@@ -55,7 +55,10 @@ const initialPreferences: TravelPreferencesForm = {
 export default function PlanTrip() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [preferences, setPreferences] = useState<TravelPreferencesForm>(initialPreferences);
+  const [preferences, setPreferences] = useState<TravelPreferencesForm>(() => {
+    const savedPreferences = localStorage.getItem('travelPreferences');
+    return savedPreferences ? JSON.parse(savedPreferences) : initialPreferences;
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [destination, setDestination] = useState<Place | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,11 +66,11 @@ export default function PlanTrip() {
   const [debouncedValue, setDebouncedValue] = useState('');
 
   // Debounce function to delay the API call
-  const debounce = useCallback((func: Function, wait: number) => {
+  const debounce = useCallback((func: (value: string) => Promise<void>, wait: number) => {
     let timeout: NodeJS.Timeout;
-    return (...args: any[]) => {
+    return (value: string) => {
       clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
+      timeout = setTimeout(() => func(value), wait);
     };
   }, []);
 
@@ -75,7 +78,6 @@ export default function PlanTrip() {
   const debouncedDestinationChange = useCallback(
     debounce(async (value: string) => {
       if (value.trim()) {
-        setIsLoading(true);
         setError(null);
         try {
           const { lat, lon } = await geocodeAddress(value);
@@ -87,11 +89,9 @@ export default function PlanTrip() {
             longitude: lon,
             latitude: lat,
           });
-        } catch (err) {
+        } catch (error) {
           setError("Could not find that destination. Try a different city or check your spelling.");
           setDestination(null);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         setDestination(null);

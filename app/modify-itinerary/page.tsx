@@ -2,7 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { TravelItinerary, ItineraryFeedback } from '@/app/types/travel';
+import { TravelItinerary, ItineraryFeedback, ItineraryModificationType } from '@/app/types/travel';
+
+interface ModificationDetails {
+  type: ItineraryModificationType;
+  day: number;
+  details: {
+    activityIndex?: number;
+    mealIndex?: number;
+    transportationIndex?: number;
+    newTime?: string;
+    newLocation?: string;
+    newDescription?: string;
+    newRestaurant?: string;
+    newCuisine?: string;
+    newMethod?: string;
+    otherDetails?: string;
+  };
+}
 
 export default function ModifyItineraryPage() {
   const router = useRouter();
@@ -51,13 +68,13 @@ export default function ModifyItineraryPage() {
     }
   };
 
-  const addModification = (type: string, day: number, details: any) => {
+  const addModification = (type: ItineraryModificationType, day: number, details: ModificationDetails['details']) => {
     setFeedback(prev => ({
       ...prev,
       modifications: [
         ...prev.modifications,
         {
-          type: type as any,
+          type,
           day,
           details
         }
@@ -237,7 +254,7 @@ export default function ModifyItineraryPage() {
                         className="px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white"
                         onChange={(e) => {
                           if (e.target.value) {
-                            addModification(e.target.value, dayIndex, {
+                            addModification(e.target.value as ItineraryModificationType, dayIndex, {
                               activityIndex,
                               newTime: e.target.value === 'adjust_timing' ? activity.time : undefined,
                               newLocation: e.target.value === 'change_location' ? activity.location : undefined,
