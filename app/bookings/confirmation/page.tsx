@@ -16,7 +16,6 @@ export default function BookingConfirmationPage() {
   const [bookingStatus, setBookingStatus] = useState<
     "pending" | "success" | "error"
   >("pending");
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,34 +48,6 @@ export default function BookingConfirmationPage() {
 
     loadData();
   }, []);
-
-  const handleDownload = async () => {
-    try {
-      setIsDownloading(true);
-      const response = await fetch("/api/travel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "generate_pdf",
-          itinerary: itinerary,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-
-      const data = await response.json();
-      window.open(data.pdfUrl, "_blank");
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to download PDF. Please try again.");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -252,12 +223,10 @@ export default function BookingConfirmationPage() {
                     />
                   }
                   fileName={`itinerary-${itinerary.traveler.destination}-${itinerary.traveler.travelDates.start}.pdf`}
-                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 ${
-                    isDownloading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
                 >
                   {({ loading }) =>
-                    loading || isDownloading ? (
+                    loading ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         <span>Preparing PDF...</span>
@@ -281,36 +250,6 @@ export default function BookingConfirmationPage() {
                     )
                   }
                 </PDFDownloadLink>
-                <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 ${
-                    isDownloading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {isDownloading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Generating PDF...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span>Download Server PDF</span>
-                    </div>
-                  )}
-                </button>
                 <button
                   onClick={() => router.push("/")}
                   className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
