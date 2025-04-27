@@ -16,6 +16,7 @@ export default function BookingConfirmationPage() {
   const [bookingStatus, setBookingStatus] = useState<
     "pending" | "success" | "error"
   >("pending");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,6 +52,7 @@ export default function BookingConfirmationPage() {
 
   const handleDownload = async () => {
     try {
+      setIsDownloading(true);
       const response = await fetch("/api/travel", {
         method: "POST",
         headers: {
@@ -67,11 +69,12 @@ export default function BookingConfirmationPage() {
       }
 
       const data = await response.json();
-      // Handle the PDF data directly
       window.open(data.pdfUrl, "_blank");
     } catch (error) {
       console.error("Error:", error);
       alert("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -147,11 +150,12 @@ export default function BookingConfirmationPage() {
                           <p className="text-white font-medium">
                             ${flight.price}
                           </p>
-                          {flight.loyaltyPoints > 0 && (
-                            <p className="text-gray-300">
-                              +{flight.loyaltyPoints} points
-                            </p>
-                          )}
+                          {flight.loyaltyPoints != null &&
+                            flight.loyaltyPoints > 0 && (
+                              <p className="text-gray-300">
+                                +{flight.loyaltyPoints} points
+                              </p>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -186,11 +190,12 @@ export default function BookingConfirmationPage() {
                           <p className="text-white font-medium">
                             ${hotel.price}
                           </p>
-                          {hotel.loyaltyPoints > 0 && (
-                            <p className="text-gray-300">
-                              +{hotel.loyaltyPoints} points
-                            </p>
-                          )}
+                          {hotel.loyaltyPoints != null &&
+                            hotel.loyaltyPoints > 0 && (
+                              <p className="text-gray-300">
+                                +{hotel.loyaltyPoints} points
+                              </p>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -222,7 +227,7 @@ export default function BookingConfirmationPage() {
 
               <div className="bg-gray-700 rounded-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  What's Next?
+                  What\'s Next?
                 </h2>
                 <div className="space-y-4">
                   <p className="text-gray-300">
@@ -247,10 +252,12 @@ export default function BookingConfirmationPage() {
                     />
                   }
                   fileName={`itinerary-${itinerary.traveler.destination}-${itinerary.traveler.travelDates.start}.pdf`}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 ${
+                    isDownloading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   {({ loading }) =>
-                    loading ? (
+                    loading || isDownloading ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         <span>Preparing PDF...</span>
@@ -274,6 +281,36 @@ export default function BookingConfirmationPage() {
                     )
                   }
                 </PDFDownloadLink>
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 ${
+                    isDownloading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isDownloading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Generating PDF...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Download Server PDF</span>
+                    </div>
+                  )}
+                </button>
                 <button
                   onClick={() => router.push("/")}
                   className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
