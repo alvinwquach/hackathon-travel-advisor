@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { TravelPreferences, TravelPreferencesForm } from '@/app/types/travel';
 import Globe from '@/app/components/Globe';
@@ -61,60 +61,52 @@ export default function PlanTrip() {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [destination, setDestination] = useState<Place | null>(null);
-  // const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debouncedValue, setDebouncedValue] = useState("");
-
-  // Debounce function to delay the API call
-  const debounce = useCallback(
-    (func: (value: string) => Promise<void>, wait: number) => {
-      let timeout: NodeJS.Timeout;
-      return (value: string) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(value), wait);
-      };
-    },
-    []
-  );
 
   // Debounced function to handle destination changes
-  const debouncedDestinationChange = useCallback(
-    debounce(async (value: string) => {
-      if (value.trim()) {
-        setError(null);
-        try {
-          const { lat, lon } = await geocodeAddress(value);
-          if (lat === 0 && lon === 0) {
-            throw new Error("Destination not found.");
+  const debouncedDestinationChange = useMemo(() => {
+    let timeout: NodeJS.Timeout;
+    return (value: string) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(async () => {
+        if (value.trim()) {
+          setError(null);
+          try {
+            const { lat, lon } = await geocodeAddress(value);
+            if (lat === 0 && lon === 0) {
+              throw new Error("Destination not found.");
+            }
+            setDestination({
+              name: value,
+              longitude: lon,
+              latitude: lat,
+            });
+          } catch {
+            setError(
+              "Could not find that destination. Try a different city or check your spelling."
+            );
+            setDestination(null);
           }
-          setDestination({
-            name: value,
-            longitude: lon,
-            latitude: lat,
-          });
-        } catch (error) {
-          setError(
-            "Could not find that destination. Try a different city or check your spelling."
-          );
+        } else {
           setDestination(null);
         }
-      } else {
-        setDestination(null);
-      }
-    }, 500),
-    []
-  );
+      }, 500);
+    };
+  }, []);
 
-  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    updatePreferences({ destination: value });
-    setDebouncedValue(value);
-    debouncedDestinationChange(value);
-  };
+  const handleDestinationChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      updatePreferences({ destination: value });
+      debouncedDestinationChange(value);
+    },
+    [debouncedDestinationChange]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/travel", {
@@ -135,20 +127,22 @@ export default function PlanTrip() {
       const data = await response.json();
       localStorage.setItem("currentItinerary", JSON.stringify(data.itinerary));
       router.push("/itinerary");
-    } catch (error) {
-      console.error("Error:", error);
-      // Handle error (show error message to user)
+    } catch {
+      setError("Failed to generate itinerary. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const updatePreferences = (updates: Partial<TravelPreferencesForm>) => {
-    setPreferences((prev) => ({
-      ...prev,
-      ...updates,
-    }));
-  };
+  const updatePreferences = useCallback(
+    (updates: Partial<TravelPreferencesForm>) => {
+      setPreferences((prev) => ({
+        ...prev,
+        ...updates,
+      }));
+    },
+    []
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 py-12">
@@ -784,6 +778,8 @@ export default function PlanTrip() {
                         </p>
                       </div>
                     </div>
+
+                    {error && <p className="text-red-400 text-sm">{error}</p>}
                   </div>
                 )}
 
@@ -833,4 +829,4 @@ export default function PlanTrip() {
       </div>
     </main>
   );
-} 
+}
