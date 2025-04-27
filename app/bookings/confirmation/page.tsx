@@ -227,7 +227,7 @@ export default function BookingConfirmationPage() {
 
               <div className="bg-gray-700 rounded-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  What\'s Next?
+                  What&apos;s Next?
                 </h2>
                 <div className="space-y-4">
                   <p className="text-gray-300">
