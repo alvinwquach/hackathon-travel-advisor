@@ -5,7 +5,7 @@ import * as d3 from "d3";
 import { geoOrthographic, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
 
 interface GlobeProps {
   rotateTo: { longitude: number; latitude: number; name: string } | null;
@@ -38,17 +38,17 @@ export default function Globe({ rotateTo }: GlobeProps) {
 
     svg
       .append("path")
-      .datum({ type: "Sphere" } as d3.GeoSphere)
+      .datum({ type: "Sphere" } as unknown as Geometry) // Cast to unknown first, then to Geometry
       .attr("fill", "lightblue")
       .attr("stroke", "black")
-      .attr("d", (d) => pathGenerator(d) || "");
+      .attr("d", (d) => pathGenerator(d as Geometry) || "");
 
     svg
       .append("path")
       .datum(d3.geoGraticule10())
       .attr("stroke", "#ccc")
       .attr("fill", "none")
-      .attr("d", (d) => pathGenerator(d) || "");
+      .attr("d", (d) => pathGenerator(d as Geometry) || "");
 
     const map = svg.append("g");
 
@@ -62,14 +62,14 @@ export default function Globe({ rotateTo }: GlobeProps) {
       const world = feature(
         topology,
         topology.objects.countries as GeometryCollection
-      ) as FeatureCollection;
+      ) as FeatureCollection<Geometry>;
 
       map
         .append("path")
         .datum(world)
         .attr("fill", "#e5e5e5")
         .attr("stroke", "#ddd")
-        .attr("d", (d) => pathGenerator(d) || "");
+        .attr("d", (d) => pathGenerator(d as unknown as Geometry) || "");
 
       svg.call(
         d3.drag<SVGSVGElement, unknown>().on("drag", (event) => {
@@ -80,7 +80,9 @@ export default function Globe({ rotateTo }: GlobeProps) {
             rotate[1] - event.dy * k,
           ]);
           pathGenerator.projection(projection);
-          svg.selectAll("path").attr("d", (d) => pathGenerator(d as any) || "");
+          svg
+            .selectAll("path")
+            .attr("d", (d) => pathGenerator(d as Geometry) || "");
           updateMarker();
         })
       );
@@ -94,7 +96,7 @@ export default function Globe({ rotateTo }: GlobeProps) {
             pathGenerator.projection(projection);
             svg
               .selectAll("path")
-              .attr("d", (d) => pathGenerator(d as any) || "");
+              .attr("d", (d) => pathGenerator(d as Geometry) || "");
             updateMarker();
           } else {
             transform.k = 0.3;
@@ -163,7 +165,7 @@ export default function Globe({ rotateTo }: GlobeProps) {
               pathGenerator.projection(projection);
               svg
                 .selectAll("path")
-                .attr("d", (d) => pathGenerator(d as any) || "");
+                .attr("d", (d) => pathGenerator(d as Geometry) || "");
               updateMarker();
             };
           });
